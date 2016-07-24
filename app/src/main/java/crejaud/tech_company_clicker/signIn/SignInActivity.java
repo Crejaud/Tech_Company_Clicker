@@ -231,6 +231,7 @@ public class SignInActivity extends BaseActivity implements
         if (user != null) {
             Log.d("LOGIN", "Updating UI");
             Intent clickerIntent = new Intent(this, ClickerActivity.class);
+            clickerIntent.putExtra("unique_id", user.getUid());
             startActivityForResult(clickerIntent, RC_SIGN_OUT);
         }
     }

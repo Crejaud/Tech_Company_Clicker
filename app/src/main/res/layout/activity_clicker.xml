@@ -11,6 +11,7 @@
         android:text="@string/initialize_counter"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center"
         android:layout_centerVertical="true"
         android:layout_alignParentTop="true"
         android:id="@+id/currency_text" />

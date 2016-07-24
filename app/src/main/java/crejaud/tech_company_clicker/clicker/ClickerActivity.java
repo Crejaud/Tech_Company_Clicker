@@ -24,10 +24,14 @@ public class ClickerActivity extends AppCompatActivity implements
         View.OnClickListener {
 
     private TextView mCurrencyTextView;
-    private long currencyPerSec;
+    private Long currencyPerSec;
 
-    private DatabaseReference mRoofRef = FirebaseDatabase.getInstance().getReference();
-    private DatabaseReference mCurrencyRef = mRoofRef.child("currency");
+    private String firebaseUid;
+
+    private DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
+    private DatabaseReference mCompanyRef;
+
+    private String company;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +44,57 @@ public class ClickerActivity extends AppCompatActivity implements
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
 
+        // Get Uid
+        firebaseUid = getIntent().getExtras().getString("unique_id");
+
+        // Create company "Yo"
+        mRootRef.child("users").child(firebaseUid).setValue("Yo");
+
+        // find user's company
+        mRootRef.child("users").child(firebaseUid).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                company = dataSnapshot.getValue(String.class);
+                Log.d("Found Company", company);
+                mCompanyRef = mRootRef.child("companies").child(company);
+                mCompanyRef.child("currency").setValue(0L);
+                mCompanyRef.child("currencyPerSec").setValue(1L);
+                mCompanyRef.child("users").child(firebaseUid).setValue(true);
+
+                mCompanyRef.child("currency").addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        Long currency = dataSnapshot.getValue(Long.class);
+                        Log.d("Currency!", currency + "");
+                        mCurrencyTextView.setText(String.format(currency.toString()));
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        // uhhhh?
+                    }
+                });
+
+                mCompanyRef.child("currencyPerSec").addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        currencyPerSec = dataSnapshot.getValue(Long.class);
+                        Log.d("Currency per sec", currencyPerSec + "");
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        // uhhhh?
+                    }
+                });
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
         // Views
         mCurrencyTextView = (TextView) findViewById(R.id.currency_text);
 
@@ -47,31 +102,10 @@ public class ClickerActivity extends AppCompatActivity implements
         findViewById(R.id.clicker_button).setOnClickListener(this);
         findViewById(R.id.sign_out_button).setOnClickListener(this);
 
-        // get currency per second
-        currencyPerSec = 1;
-
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        mCurrencyRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Long currency = dataSnapshot.getValue(Long.class);
-                mCurrencyTextView.setText(String.format(currency.toString()));
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                // uhhhh?
-            }
-        });
     }
 
     private void incrementCurrency() {
-        mCurrencyRef.runTransaction(new Transaction.Handler() {
+        mCompanyRef.child("currency").runTransaction(new Transaction.Handler() {
             @Override
             public Transaction.Result doTransaction(MutableData mutableData) {
                 if (mutableData.getValue() == null) {
