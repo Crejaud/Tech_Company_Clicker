@@ -52,4 +52,7 @@
     <string name="email_fmt">Email: %s</string>
 
     <string name="initialize_counter">0</string>
+
+    <string name="banner_ad_unit_id">ca-app-pub-1053526407243665/6900496034</string>
+    <string name="banner_ad_app_id">ca-app-pub-1053526407243665~3947029632</string>
 </resources>
