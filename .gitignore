@@ -9,6 +9,7 @@ local.properties
 
 # Gradle generated files
 .gradle/
+build/
 
 # Signing files
 .signing/
@@ -35,3 +36,6 @@ local.properties
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Firebase google services
+app/google-services.json
