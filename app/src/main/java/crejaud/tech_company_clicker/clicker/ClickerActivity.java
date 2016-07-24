@@ -22,7 +22,6 @@ import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 
 import crejaud.tech_company_clicker.R;
-import crejaud.tech_company_clicker.global.AuthApplication;
 
 public class ClickerActivity extends AppCompatActivity implements
         View.OnClickListener {
