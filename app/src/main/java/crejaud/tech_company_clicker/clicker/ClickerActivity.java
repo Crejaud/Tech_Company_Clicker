@@ -15,6 +15,8 @@ import android.widget.TextView;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.games.Games;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -44,10 +46,18 @@ public class ClickerActivity extends BaseActivity implements
     private DatabaseReference mUsersRef;
     private DatabaseReference mCompanyRef;
 
+    private GoogleApiClient mGoogleGamesApiClient;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_clicker);
+
+        mGoogleGamesApiClient = new GoogleApiClient.Builder(this)
+                .addApi(Games.API).addScope(Games.SCOPE_GAMES)
+                .build();
+
+        mGoogleGamesApiClient.connect();
 
         // Set up firebase references
         mCompaniesRef = mRootRef.child(getResources().getString(R.string.firebase_db_companies));
@@ -121,11 +131,18 @@ public class ClickerActivity extends BaseActivity implements
     }
 
     private void incrementCurrencyFromClick() {
+        Log.d("CurrentPlayerInClicker", Games.Players.getCurrentPlayer(mGoogleGamesApiClient).getDisplayName());
         mCompanyRef.child(getResources().getString(R.string.firebase_db_currency)).runTransaction(new ClickTransactionHandler(clickEventListener));
     }
 
     private void signOut() {
         Log.d("LOGIN", "Sign out clicked!!!");
+
+        if (mGoogleGamesApiClient != null && mGoogleGamesApiClient.isConnected()) {
+            Games.signOut(mGoogleGamesApiClient);
+            mGoogleGamesApiClient.disconnect();
+        }
+
         setResult(Activity.RESULT_OK);
         finish();
     }
