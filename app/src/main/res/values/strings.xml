@@ -53,6 +53,14 @@
 
     <string name="initialize_counter">0</string>
 
+    <string name="intent_extra_unique_id">unique_id</string>
+
+    <string name="firebase_db_users">users</string>
+    <string name="firebase_db_currency">currency</string>
+    <string name="firebase_db_companies">companies</string>
+    <string name="firebase_db_currency_per_sec">currencyPerSec</string>
+    <string name="firebase_db_currency_per_click">currencyPerClick</string>
+
     <string name="banner_ad_unit_id">ca-app-pub-1053526407243665/6900496034</string>
     <string name="banner_ad_app_id">ca-app-pub-1053526407243665~3947029632</string>
 </resources>

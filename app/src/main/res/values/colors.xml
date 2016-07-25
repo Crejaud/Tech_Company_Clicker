@@ -6,4 +6,7 @@
 
     <color name="grey_100">#F5F5F5</color>
     <color name="grey_300">#E0E0E0</color>
+
+    <color name="green">#4DFA90</color>
+    <color name="red">#FF5468</color>
 </resources>

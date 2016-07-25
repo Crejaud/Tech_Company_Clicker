@@ -17,11 +17,18 @@
         android:id="@+id/currency_text" />
 
     <Button
-        android:text="Button"
+        android:text="Click"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:id="@+id/clicker_button" />
+
+    <Button
+        android:text="New Company"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/sign_out_button"
+        android:id="@+id/new_company_button" />
 
     <Button
         android:text="@string/sign_out"
