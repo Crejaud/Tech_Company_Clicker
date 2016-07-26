@@ -24,13 +24,6 @@
         android:id="@+id/clicker_button" />
 
     <Button
-        android:text="New Company"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/sign_out_button"
-        android:id="@+id/new_company_button" />
-
-    <Button
         android:text="@string/sign_out"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

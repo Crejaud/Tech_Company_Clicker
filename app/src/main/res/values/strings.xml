@@ -52,9 +52,20 @@
     <string name="id_fmt">User ID: %s</string>
     <string name="email_fmt">Email: %s</string>
 
+    <string name="company">Company: %s</string>
+    <string name="currency">Currency: %s</string>
+    <string name="play">Play</string>
+    <string name="create_new_company">Create New Company</string>
+    <string name="join_company">Join an existing Company</string>
+    <string name="invite_users">Invite Players to Company</string>
+    <string name="leave_company">Leave Company</string>
+    <string name="achievements">Achievements</string>
+    <string name="leaderboards">Leaderboards</string>
+
     <string name="initialize_counter">0</string>
 
     <string name="intent_extra_unique_id">unique_id</string>
+    <string name="intent_extra_company_name">company_name</string>
 
     <string name="firebase_db_users">users</string>
     <string name="firebase_db_currency">currency</string>
@@ -64,4 +75,7 @@
 
     <string name="banner_ad_unit_id">ca-app-pub-1053526407243665/6900496034</string>
     <string name="banner_ad_app_id">ca-app-pub-1053526407243665~3947029632</string>
+
+    <string name="leaderboards_company_level_id">CgkIw8W18J8EEAIQAw</string>
+    <string name="leaderboards_player_level_id">CgkIw8W18J8EEAIQAg</string>
 </resources>

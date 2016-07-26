@@ -44,6 +44,7 @@ import com.google.firebase.auth.GoogleAuthProvider;
 
 import crejaud.tech_company_clicker.R;
 import crejaud.tech_company_clicker.clicker.ClickerActivity;
+import crejaud.tech_company_clicker.menu.MenuActivity;
 
 /**
  * Demonstrate Firebase Authentication using a Google ID Token.
@@ -54,7 +55,7 @@ public class SignInActivity extends BaseActivity implements
 
     private static final String TAG = "GoogleActivity";
     private static final int RC_SIGN_IN = 9001;
-    private static final int RC_SIGN_OUT = 9002;
+    public static final int RC_SIGN_OUT = 9002;
 
     // Moderates the firebase double signout bug
     private boolean firebaseSignoutBugFlag;
@@ -116,7 +117,7 @@ public class SignInActivity extends BaseActivity implements
                 }
                 // [START_EXCLUDE]
                 if (!firebaseSignoutBugFlag) {
-                    startClicker(user);
+                    goToMenu(user);
                 }
                 // FIX WHEN FIREBASE FIXES THIS BUG
                 firebaseSignoutBugFlag = !firebaseSignoutBugFlag;
@@ -227,11 +228,11 @@ public class SignInActivity extends BaseActivity implements
         Auth.GoogleSignInApi.revokeAccess(mGoogleApiClient);
     }
 
-    private void startClicker(FirebaseUser user) {
+    private void goToMenu(FirebaseUser user) {
         hideProgressDialog();
         if (user != null) {
             Log.d("LOGIN", "Updating UI");
-            Intent clickerIntent = new Intent(this, ClickerActivity.class);
+            Intent clickerIntent = new Intent(this, MenuActivity.class);
             clickerIntent.putExtra(getResources().getString(R.string.intent_extra_unique_id), user.getUid());
             startActivityForResult(clickerIntent, RC_SIGN_OUT);
         }
