@@ -19,29 +19,27 @@ import crejaud.tech_company_clicker.R;
  * Created by creja_000 on 7/24/2016.
  */
 
-public class CurrencyEventListener implements ValueEventListener {
+public class BigIntegerEventListener implements ValueEventListener {
 
-    private Context ctx;
-    private BigInteger currency;
-    private TextView currencyTextView;
+    private String prefix;
+    private BigInteger num;
+    private TextView numTextView;
 
-    public CurrencyEventListener(TextView currencyTextView, Context ctx) {
-        // initially 0 until it can receive the currencyPerClick
-        this.currency = new BigInteger("0");
-        this.currencyTextView = currencyTextView;
-        this.ctx = ctx;
+    public BigIntegerEventListener(TextView numTextView, String prefix) {
+        this.num = new BigInteger("0");
+        this.numTextView = numTextView;
+        this.prefix = prefix;
     }
 
     @Override
     public void onDataChange(DataSnapshot dataSnapshot) {
         if (dataSnapshot.getValue() == null) {
-            currency = new BigInteger("0");
+            num = new BigInteger("0");
         }
         else {
-            currency = new BigInteger(dataSnapshot.getValue(String.class));
+            num = new BigInteger(dataSnapshot.getValue(String.class));
         }
-        Log.d("Currency!", currency + "");
-        currencyTextView.setText(ctx.getResources().getString(R.string.currency, String.format(Locale.US, "%,d", currency)));
+        numTextView.setText(String.format(prefix, String.format(Locale.US, "%,d", num)));
     }
 
     @Override

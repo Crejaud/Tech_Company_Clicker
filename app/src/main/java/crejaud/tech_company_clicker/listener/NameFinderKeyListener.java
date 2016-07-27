@@ -1,34 +1,33 @@
 package crejaud.tech_company_clicker.listener;
 
-import android.graphics.Color;
 import android.support.v7.app.AlertDialog;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
 
 /**
  * Created by creja_000 on 7/24/2016.
  */
 
-public class CompanyNameKeyListener implements View.OnKeyListener {
+public class NameFinderKeyListener implements View.OnKeyListener {
 
-    private DatabaseReference mCompaniesRef;
+    private DatabaseReference namesRef;
     private AlertDialog alertDialog;
 
-    public CompanyNameKeyListener(DatabaseReference mCompaniesRef, AlertDialog alertDialog) {
-        this.mCompaniesRef = mCompaniesRef;
+    public NameFinderKeyListener(DatabaseReference namesRef, AlertDialog alertDialog) {
+        this.namesRef = namesRef;
         this.alertDialog = alertDialog;
     }
 
     @Override
     public boolean onKey(View view, int i, KeyEvent keyEvent) {
+        // disable on key stroke no matter what to prevent any possible duplicate company name
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+
         // on every keystroke, check to see if company name exists
-        mCompaniesRef.addListenerForSingleValueEvent(new CompanyNameEventListener(view, alertDialog));
+        namesRef.addListenerForSingleValueEvent(new NameFinderEventListener(view, alertDialog));
         return false;
     }
 }

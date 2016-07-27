@@ -1,15 +1,9 @@
 package crejaud.tech_company_clicker.clicker;
 
 import android.app.Activity;
-import android.content.DialogInterface;
-import android.graphics.Color;
-import android.support.v7.app.AlertDialog;
 import android.os.Bundle;
-import android.text.InputType;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import com.google.android.gms.ads.AdRequest;
@@ -17,17 +11,13 @@ import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.games.Games;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import crejaud.tech_company_clicker.R;
 import crejaud.tech_company_clicker.handler.ClickTransactionHandler;
 import crejaud.tech_company_clicker.listener.ClickEventListener;
-import crejaud.tech_company_clicker.listener.CompanyNameKeyListener;
-import crejaud.tech_company_clicker.listener.CurrencyEventListener;
+import crejaud.tech_company_clicker.listener.BigIntegerEventListener;
 import crejaud.tech_company_clicker.signIn.BaseActivity;
 
 public class ClickerActivity extends BaseActivity implements
@@ -37,9 +27,9 @@ public class ClickerActivity extends BaseActivity implements
 
     // Listeners
     private ClickEventListener clickEventListener;
-    private CurrencyEventListener currencyEventListener;
+    private BigIntegerEventListener currencyEventListener;
 
-    private String firebaseUid, companyName;
+    private String firebaseUid, companyName, username;
 
     private DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
     private DatabaseReference mCompaniesRef = null;
@@ -95,13 +85,16 @@ public class ClickerActivity extends BaseActivity implements
         // Get company name
         companyName = getIntent().getExtras().getString(getString(R.string.intent_extra_company_name));
 
+        // Get username
+        username = getIntent().getExtras().getString(getString(R.string.intent_extra_username));
+
         // get the company ref using the company name!
         mCompanyRef = mCompaniesRef.child(companyName);
 
         // ensure the user of the company is in the company's users list
         mCompanyRef.child(getString(R.string.firebase_db_users)).child(firebaseUid).setValue(true);
 
-        currencyEventListener = new CurrencyEventListener(mCurrencyTextView, getApplicationContext());
+        currencyEventListener = new BigIntegerEventListener(mCurrencyTextView, getString(R.string.currency));
 
         // set listener for company's currency (FOREVER!, since it will be changing!)
         mCompanyRef.child(getString(R.string.firebase_db_currency)).addValueEventListener(currencyEventListener);

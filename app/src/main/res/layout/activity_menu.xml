@@ -15,6 +15,12 @@
         android:id="@+id/company_name_text" />
 
     <TextView
+        android:text="@string/company_level"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/company_level_text" />
+
+    <TextView
         android:text="@string/currency"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

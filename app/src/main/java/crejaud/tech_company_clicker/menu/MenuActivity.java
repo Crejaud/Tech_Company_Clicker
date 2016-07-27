@@ -1,14 +1,11 @@
 package crejaud.tech_company_clicker.menu;
 
-import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.InputType;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -17,9 +14,6 @@ import android.widget.TextView;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.games.Games;
 import com.google.firebase.database.DataSnapshot;
@@ -31,8 +25,8 @@ import com.google.firebase.database.ValueEventListener;
 import crejaud.tech_company_clicker.R;
 import crejaud.tech_company_clicker.clicker.ClickerActivity;
 import crejaud.tech_company_clicker.listener.ClickEventListener;
-import crejaud.tech_company_clicker.listener.CompanyNameKeyListener;
-import crejaud.tech_company_clicker.listener.CurrencyEventListener;
+import crejaud.tech_company_clicker.listener.NameFinderKeyListener;
+import crejaud.tech_company_clicker.listener.BigIntegerEventListener;
 import crejaud.tech_company_clicker.signIn.BaseActivity;
 import crejaud.tech_company_clicker.signIn.SignInActivity;
 
@@ -42,19 +36,21 @@ public class MenuActivity extends BaseActivity implements
     private static int REQUEST_ACHIEVEMENTS = 9004;
     private static int REQUEST_LEADERBOARD = 9005;
 
-    private TextView companyNameTextView, currencyTextView;
+    private TextView companyNameTextView, currencyTextView, companyLevelTextView;
 
-    private CurrencyEventListener currencyEventListener;
+    private BigIntegerEventListener currencyEventListener, companyLevelEventListener;
     private ClickEventListener clickEventListener;
 
     private Button playButton, inviteUsersButton, leaveCompanyButton, createNewCompanyButton, joinCompanyButton;
 
-    private String firebaseUid, companyName;
+    private String firebaseUid, companyName, username;
 
     private DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
     private DatabaseReference mCompaniesRef = null;
-    private DatabaseReference mUsersRef;
     private DatabaseReference mCompanyRef;
+    private DatabaseReference mUsersRef;
+    private DatabaseReference mUserRef;
+    private DatabaseReference mUidToUsernameRef;
 
     private GoogleApiClient mGoogleGamesApiClient;
 
@@ -77,10 +73,12 @@ public class MenuActivity extends BaseActivity implements
         // Set up firebase references
         mCompaniesRef = mRootRef.child(getResources().getString(R.string.firebase_db_companies));
         mUsersRef = mRootRef.child(getResources().getString(R.string.firebase_db_users));
+        mUidToUsernameRef = mRootRef.child(getString(R.string.firebase_db_uid_to_username));
 
         // Views
         companyNameTextView = (TextView) findViewById(R.id.company_name_text);
         currencyTextView = (TextView) findViewById(R.id.currency_text);
+        companyLevelTextView = (TextView) findViewById(R.id.company_level_text);
 
         // Buttons
         playButton = (Button) findViewById(R.id.play_button);
@@ -104,7 +102,7 @@ public class MenuActivity extends BaseActivity implements
         findViewById(R.id.achievements_button).setOnClickListener(this);
         findViewById(R.id.leaderboards_button).setOnClickListener(this);
 
-        setUpTexts();
+        getUsernameFromUid();
     }
 
     private void setAds() {
@@ -115,14 +113,105 @@ public class MenuActivity extends BaseActivity implements
         mAdView.loadAd(adRequest);
     }
 
-    private void setUpTexts() {
+    private void promptUsernameCreation() {
+        // Step 1: Get new username name from user
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Create your username!");
+        builder.setMessage("This is how other players will be see you!");
+
+        // Set up the input
+        final EditText inputUsername = new EditText(this);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        inputUsername.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(inputUsername);
+
+        // Set up the buttons
+        builder.setPositiveButton("CREATE", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // show progress dialog, while loading everything
+                showProgressDialog();
+
+                String newUsername = inputUsername.getText().toString();
+                // step 2: create username!
+                createUsername(newUsername);
+            }
+        });
+
+        AlertDialog alertDialog = builder.show();
+
+        // initially disabled
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+
+        // default text color to be red
+        inputUsername.setTextColor(Color.RED);
+
+        // set key listener for edit text
+        inputUsername.setOnKeyListener(new NameFinderKeyListener(mUsersRef, alertDialog));
+    }
+
+    private void createUsername(String newUsername) {
+        username = newUsername;
+
+        // add uid to username linking
+        mUidToUsernameRef.child(firebaseUid).setValue(username);
+
+        // add user to users list!
+        // get user ref
+        mUserRef = mUsersRef.child(username);
+        // set currency per click to 1
+        mUserRef.child(getString(R.string.firebase_db_currency_per_click)).setValue("1");
+        // set user level to 1
+        mUserRef.child(getString(R.string.firebase_db_level)).setValue("1");
+        // set XP to 0
+        mUserRef.child(getString(R.string.firebase_db_xp)).setValue("0");
+        // set XPtoLevel to 100
+        mUserRef.child(getString(R.string.firebase_db_xp_to_level)).setValue("100");
+        // set perkPoints to 0
+        mUserRef.child(getString(R.string.firebase_db_perk_points)).setValue("0");
+
+        // get company properties and set up text views (it's ok if there is no company)
+        getCompanyProperties();
+    }
+
+    private void getUsernameFromUid() {
         // Get Uid
         firebaseUid = getIntent().getExtras().getString(getString(R.string.intent_extra_unique_id));
 
-        // get company name from unique firebase id (ONCE!)
-        mUsersRef.child(firebaseUid).addListenerForSingleValueEvent(new ValueEventListener() {
+        mUidToUsernameRef.child(firebaseUid).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                // this is the user's first time playing!
+                if (dataSnapshot.getValue() == null) {
+                    // prompt user to create username
+                    hideProgressDialog();
+                    promptUsernameCreation();
+                    return;
+                }
+
+                // get the user's username
+                username = dataSnapshot.getValue(String.class);
+
+                // set the user ref to the username
+                mUserRef = mUsersRef.child(username);
+
+                // get the company properties
+                getCompanyProperties();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void getCompanyProperties() {
+        // get company name
+        mUsersRef.child(username).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // user has no company!
                 // user does not belong to a company!
                 if (dataSnapshot.getValue() == null) {
                     // enable create new company button
@@ -131,7 +220,8 @@ public class MenuActivity extends BaseActivity implements
                     joinCompanyButton.setEnabled(true);
 
                     companyNameTextView.setText(getString(R.string.company, "-----"));
-                    currencyTextView.setText(getString(R.string.currency, "0"));
+                    currencyTextView.setText(getString(R.string.currency, "-"));
+                    companyLevelTextView.setText(getString(R.string.company_level, "-"));
 
                     hideProgressDialog();
                     return;
@@ -153,15 +243,15 @@ public class MenuActivity extends BaseActivity implements
                 // get the company ref using the company name!
                 mCompanyRef = mCompaniesRef.child(companyName);
 
-                currencyEventListener = new CurrencyEventListener(currencyTextView, getApplicationContext());
+                currencyEventListener = new BigIntegerEventListener(currencyTextView, getApplicationContext().getString(R.string.currency));
 
                 // set listener for company's currency (FOREVER!, since it will be changing!)
                 mCompanyRef.child(getString(R.string.firebase_db_currency)).addValueEventListener(currencyEventListener);
 
-                clickEventListener = new ClickEventListener();
+                companyLevelEventListener = new BigIntegerEventListener(companyLevelTextView, getApplication().getString(R.string.company_level));
 
-                // set listener for company's currency per second (FOREVER!, since it will be changing!)
-                mCompanyRef.child(getResources().getString(R.string.firebase_db_currency_per_click)).addValueEventListener(clickEventListener);
+                // get the company level
+                mCompanyRef.child(getResources().getString(R.string.firebase_db_level)).addValueEventListener(companyLevelEventListener);
 
                 // done loading everything, can now hide progress dialog
                 hideProgressDialog();
@@ -178,6 +268,7 @@ public class MenuActivity extends BaseActivity implements
         Intent clickerIntent = new Intent(this, ClickerActivity.class);
         clickerIntent.putExtra(getString(R.string.intent_extra_unique_id), firebaseUid);
         clickerIntent.putExtra(getString(R.string.intent_extra_company_name), companyName);
+        clickerIntent.putExtra(getString(R.string.intent_extra_username), username);
         startActivityForResult(clickerIntent, SignInActivity.RC_SIGN_OUT);
     }
 
@@ -221,7 +312,7 @@ public class MenuActivity extends BaseActivity implements
         inputCompanyName.setTextColor(Color.RED);
 
         // set key listener for edit text
-        inputCompanyName.setOnKeyListener(new CompanyNameKeyListener(mCompaniesRef, alertDialog));
+        inputCompanyName.setOnKeyListener(new NameFinderKeyListener(mCompaniesRef, alertDialog));
     }
 
     private void createCompany(String newCompanyName) {
@@ -232,28 +323,28 @@ public class MenuActivity extends BaseActivity implements
         companyNameTextView.setText(getString(R.string.company, companyName));
 
         //set new company name for user
-        mUsersRef.child(firebaseUid).setValue(companyName);
+        mUsersRef.child(username).child(getString(R.string.firebase_db_company)).setValue(companyName);
 
         mCompanyRef = mCompaniesRef.child(companyName);
 
         // set the currency of the company to 0 (default)
         mCompanyRef.child(getString(R.string.firebase_db_currency)).setValue("0");
 
-        // set the currency per second to 1 (default)
-        mCompanyRef.child(getString(R.string.firebase_db_currency_per_click)).setValue("1");
+        // set the currency per second to 0 (default)
+        mCompanyRef.child(getString(R.string.firebase_db_currency_per_sec)).setValue("0");
 
         // set the user of the company in the company's users list
-        mCompanyRef.child(getString(R.string.firebase_db_users)).child(firebaseUid).setValue(true);
+        mCompanyRef.child(getString(R.string.firebase_db_users)).child(username).setValue(true);
 
-        currencyEventListener = new CurrencyEventListener(currencyTextView, this);
+        currencyEventListener = new BigIntegerEventListener(currencyTextView, getString(R.string.currency));
 
         // set listener for company's currency (FOREVER!, since it will be changing!)
         mCompanyRef.child(getString(R.string.firebase_db_currency)).addValueEventListener(currencyEventListener);
 
-        clickEventListener = new ClickEventListener();
+        companyLevelEventListener = new BigIntegerEventListener(companyLevelTextView, getApplication().getString(R.string.company_level));
 
-        // set listener for company's currency per second (FOREVER!, since it will be changing!)
-        mCompanyRef.child(getString(R.string.firebase_db_currency_per_click)).addValueEventListener(clickEventListener);
+        // get the company level
+        mCompanyRef.child(getResources().getString(R.string.firebase_db_level)).addValueEventListener(companyLevelEventListener);
 
         // disable create company button
         createNewCompanyButton.setEnabled(false);
@@ -270,11 +361,93 @@ public class MenuActivity extends BaseActivity implements
     }
 
     private void inviteUsers() {
+        // Step 1: Get new company name from user
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Invite a player to your company!");
+        builder.setMessage("Please add a valid username.");
 
+        // Set up the input
+        final EditText inputUsername = new EditText(this);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        inputUsername.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(inputUsername);
+
+        // Set up the buttons
+        builder.setPositiveButton("CREATE", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // show progress dialog, while loading everything
+                showProgressDialog();
+
+                String invitedUser = inputUsername.getText().toString();
+                // Step 2: invite the user
+                // TODO
+
+                hideProgressDialog();
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        AlertDialog alertDialog = builder.show();
+
+        // initially disabled
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+
+        // default text color to be red
+        inputUsername.setTextColor(Color.RED);
+
+        // set key listener for edit text
+        inputUsername.setOnKeyListener(new NameFinderKeyListener(mUsersRef, alertDialog));
     }
 
     private void joinCompany() {
+        // Step 1: Get new company name from user
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Join an existing company!");
+        builder.setMessage("Please find a valid company name.");
 
+        // Set up the input
+        final EditText inputCompanyName = new EditText(this);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        inputCompanyName.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(inputCompanyName);
+
+        // Set up the buttons
+        builder.setPositiveButton("JOIN", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // show progress dialog, while loading everything
+                showProgressDialog();
+
+                String newCompanyName = inputCompanyName.getText().toString();
+                // step 2: join company using new company name
+                
+
+                hideProgressDialog();
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        AlertDialog alertDialog = builder.show();
+
+        // initially disabled
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+
+        // default text color to be red
+        inputCompanyName.setTextColor(Color.RED);
+
+        // set key listener for edit text
+        inputCompanyName.setOnKeyListener(new NameFinderKeyListener(mCompaniesRef, alertDialog));
     }
 
     private void leaveCompany() {
@@ -337,7 +510,7 @@ public class MenuActivity extends BaseActivity implements
             }
         });
 
-        AlertDialog alertDialog = builder.show();
+        builder.show();
     }
 
     private void goToAchievements() {
