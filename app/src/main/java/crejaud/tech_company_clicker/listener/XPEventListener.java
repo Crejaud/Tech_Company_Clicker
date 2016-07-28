@@ -1,8 +1,11 @@
 package crejaud.tech_company_clicker.listener;
 
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.provider.ContactsContract;
 import android.util.Log;
+import android.view.animation.DecelerateInterpolator;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.google.firebase.database.DataSnapshot;
@@ -13,6 +16,8 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.math.BigInteger;
 import java.util.Locale;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import crejaud.tech_company_clicker.R;
 import crejaud.tech_company_clicker.handler.LevelUpTransactionHandler;
@@ -23,43 +28,51 @@ import crejaud.tech_company_clicker.handler.LevelUpTransactionHandler;
 
 public class XPEventListener implements ValueEventListener {
 
-    private Context ctx;
+    private ReentrantLock lock;
     private BigInteger xp, xpToNextLevel;
     private TextView xpTextView;
-    private LevelUpTransactionHandler levelUpTransactionHandler;
-    private DatabaseReference levelRef, xpRef, xpToNextLevelRef, perkPointsRef;
+    private DatabaseReference levelRef, xpRef, perkPointsRef, currencyPerClickRef;
+    private ProgressBar xpBar;
 
-    public XPEventListener(BigInteger xpToNextLevel, TextView xpTextView, Context ctx, DatabaseReference dbRef) {
-        // initially 0 until it can receive the currencyPerClick
-        this.xp = new BigInteger("0");
-        this.xpToNextLevel = xpToNextLevel;
+    public XPEventListener(TextView xpTextView, DatabaseReference levelRef, DatabaseReference xpRef, DatabaseReference perkPointsRef, DatabaseReference currencyPerClickRef, ProgressBar xpBar) {
         this.xpTextView = xpTextView;
-        this.ctx = ctx;
-
-        this.levelRef = dbRef.child(ctx.getString(R.string.firebase_db_level));
-        this.xpRef = dbRef.child(ctx.getString(R.string.firebase_db_level));
-        this.xpToNextLevelRef = dbRef.child(ctx.getString(R.string.firebase_db_level));
-        this.perkPointsRef = dbRef.child(ctx.getString(R.string.firebase_db_perk_points));
-
-        this.levelUpTransactionHandler = new LevelUpTransactionHandler(xpRef, xpToNextLevelRef);
+        this.lock = new ReentrantLock();
+        this.levelRef = levelRef;
+        this.xpRef = xpRef;
+        this.perkPointsRef = perkPointsRef;
+        this.currencyPerClickRef = currencyPerClickRef;
+        this.xpBar = xpBar;
     }
 
     @Override
     public void onDataChange(DataSnapshot dataSnapshot) {
         if (dataSnapshot.getValue() == null) {
-            xp = new BigInteger("0");
+            return;
         }
         else {
-            xp = new BigInteger(dataSnapshot.getValue(String.class));
+            xp = new BigInteger(dataSnapshot.getValue(String.class).split("/")[0]);
+            xpToNextLevel = new BigInteger(dataSnapshot.getValue(String.class).split("/")[1]);
         }
+
+        // set progress bar
+        BigInteger percentage = xp.multiply(new BigInteger("100")).divide(xpToNextLevel);
+
+        ObjectAnimator animation = ObjectAnimator.ofInt(xpBar, "progress", percentage.intValue());
+        animation.setDuration(2000);
+        animation.setInterpolator(new DecelerateInterpolator());
+        animation.start();
+
+        Log.d("XP Percentage", percentage.intValue() + "");
 
         // level up!!!
-        if (xp.compareTo(xpToNextLevel) >= 0) {
-            levelRef.runTransaction(levelUpTransactionHandler);
+        if (xp.compareTo(xpToNextLevel) >= 0 && !lock.isLocked()) {
+            lock.lock();
+            Log.d("Lock", lock.toString());
+            Log.d("Lock", "Locked is " + lock.isLocked());
+            Log.d("Level Up!", xp + "/" + xpToNextLevel);
+            levelRef.runTransaction(new LevelUpTransactionHandler(xpRef, perkPointsRef, currencyPerClickRef, lock));
         }
-
-        Log.d("Currency!", xp + "");
-        xpTextView.setText(ctx.getResources().getString(R.string.currency, String.format(Locale.US, "%,d", xp)));
+        xpTextView.setText(String.format(Locale.US, "%,d / %,d", xp, xpToNextLevel));
     }
 
     @Override

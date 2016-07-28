@@ -39,14 +39,13 @@ public class MenuActivity extends BaseActivity implements
     private TextView companyNameTextView, currencyTextView, companyLevelTextView;
 
     private BigIntegerEventListener currencyEventListener, companyLevelEventListener;
-    private ClickEventListener clickEventListener;
 
     private Button playButton, inviteUsersButton, leaveCompanyButton, createNewCompanyButton, joinCompanyButton;
 
     private String firebaseUid, companyName, username;
 
     private DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
-    private DatabaseReference mCompaniesRef = null;
+    private DatabaseReference mCompaniesRef;
     private DatabaseReference mCompanyRef;
     private DatabaseReference mUsersRef;
     private DatabaseReference mUserRef;
@@ -62,12 +61,13 @@ public class MenuActivity extends BaseActivity implements
         // show progress dialog, while loading everything
         showProgressDialog();
 
+        // connect to google play games api client
         mGoogleGamesApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Games.API).addScope(Games.SCOPE_GAMES)
                 .build();
-
         mGoogleGamesApiClient.connect();
 
+        // set ad banner
         setAds();
 
         // Set up firebase references
@@ -102,7 +102,7 @@ public class MenuActivity extends BaseActivity implements
         findViewById(R.id.achievements_button).setOnClickListener(this);
         findViewById(R.id.leaderboards_button).setOnClickListener(this);
 
-        getUsernameFromUid();
+        getUserInfo();
     }
 
     private void setAds() {
@@ -111,6 +111,87 @@ public class MenuActivity extends BaseActivity implements
         AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);
+    }
+
+    private void getUserInfo() {
+        // Get Uid
+        firebaseUid = getIntent().getExtras().getString(getString(R.string.intent_extra_unique_id));
+
+        mRootRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                DataSnapshot uidToUsernameDataSnapshot = dataSnapshot.child(getString(R.string.firebase_db_uid_to_username)).child(firebaseUid);
+                // this is the user's first time playing!
+                if (uidToUsernameDataSnapshot.getValue() == null) {
+                    // prompt user to create username
+                    hideProgressDialog();
+                    promptUsernameCreation();
+                    return;
+                }
+
+                // the user exists
+                username = uidToUsernameDataSnapshot.getValue(String.class);
+                // set the user ref to the username
+                mUserRef = mUsersRef.child(username);
+
+                DataSnapshot userDataSnapshot = dataSnapshot.child(getString(R.string.firebase_db_users)).child(username);
+                DataSnapshot companyDataSnapshot = userDataSnapshot.child(getString(R.string.firebase_db_company));
+
+                // user has no company!
+                // user does not belong to a company!
+                if (companyDataSnapshot.getValue() == null) {
+                    // enable create new company button
+                    createNewCompanyButton.setEnabled(true);
+                    // enable join company button
+                    joinCompanyButton.setEnabled(true);
+
+                    companyNameTextView.setText(getString(R.string.company, "-----"));
+                    currencyTextView.setText(getString(R.string.currency, "-"));
+                    companyLevelTextView.setText(getString(R.string.company_level, "-"));
+
+                    hideProgressDialog();
+                    return;
+                }
+
+                // user has a company!
+
+                // enable play button
+                playButton.setEnabled(true);
+                // enable invite button
+                inviteUsersButton.setEnabled(true);
+                // enable leave company button
+                leaveCompanyButton.setEnabled(true);
+
+                // got company name!
+                companyName = companyDataSnapshot.getValue(String.class);
+
+                // set Company Name Text
+                companyNameTextView.setText(getString(R.string.company, companyName));
+
+                // get the company ref using the company name!
+                mCompanyRef = mCompaniesRef.child(companyName);
+
+                // create currency listener
+                currencyEventListener = new BigIntegerEventListener(currencyTextView, getApplicationContext().getString(R.string.currency));
+
+                // set listener for company's currency (FOREVER!, since it will be changing!)
+                mCompanyRef.child(getString(R.string.firebase_db_currency)).addValueEventListener(currencyEventListener);
+
+                // create company level listener
+                companyLevelEventListener = new BigIntegerEventListener(companyLevelTextView, getApplication().getString(R.string.company_level));
+
+                // set listener for company's level (FOREVER!, since it will be changing!)
+                mCompanyRef.child(getResources().getString(R.string.firebase_db_level)).addValueEventListener(companyLevelEventListener);
+
+                // done loading everything, can now hide progress dialog
+                hideProgressDialog();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void promptUsernameCreation() {
@@ -164,104 +245,11 @@ public class MenuActivity extends BaseActivity implements
         // set user level to 1
         mUserRef.child(getString(R.string.firebase_db_level)).setValue("1");
         // set XP to 0
-        mUserRef.child(getString(R.string.firebase_db_xp)).setValue("0");
         // set XPtoLevel to 100
-        mUserRef.child(getString(R.string.firebase_db_xp_to_level)).setValue("100");
-        // set perkPoints to 0
-        mUserRef.child(getString(R.string.firebase_db_perk_points)).setValue("0");
+        mUserRef.child(getString(R.string.firebase_db_xp)).setValue("0/100");
 
         // get company properties and set up text views (it's ok if there is no company)
-        getCompanyProperties();
-    }
-
-    private void getUsernameFromUid() {
-        // Get Uid
-        firebaseUid = getIntent().getExtras().getString(getString(R.string.intent_extra_unique_id));
-
-        mUidToUsernameRef.child(firebaseUid).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                // this is the user's first time playing!
-                if (dataSnapshot.getValue() == null) {
-                    // prompt user to create username
-                    hideProgressDialog();
-                    promptUsernameCreation();
-                    return;
-                }
-
-                // get the user's username
-                username = dataSnapshot.getValue(String.class);
-
-                // set the user ref to the username
-                mUserRef = mUsersRef.child(username);
-
-                // get the company properties
-                getCompanyProperties();
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
-
-    private void getCompanyProperties() {
-        // get company name
-        mUsersRef.child(username).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                // user has no company!
-                // user does not belong to a company!
-                if (dataSnapshot.getValue() == null) {
-                    // enable create new company button
-                    createNewCompanyButton.setEnabled(true);
-                    // enable join company button
-                    joinCompanyButton.setEnabled(true);
-
-                    companyNameTextView.setText(getString(R.string.company, "-----"));
-                    currencyTextView.setText(getString(R.string.currency, "-"));
-                    companyLevelTextView.setText(getString(R.string.company_level, "-"));
-
-                    hideProgressDialog();
-                    return;
-                }
-
-                // enable play button
-                playButton.setEnabled(true);
-                // enable invite button
-                inviteUsersButton.setEnabled(true);
-                // enable leave company button
-                leaveCompanyButton.setEnabled(true);
-
-                // got company name!
-                companyName = dataSnapshot.getValue(String.class);
-
-                // set Company Name Text
-                companyNameTextView.setText(getString(R.string.company, companyName));
-
-                // get the company ref using the company name!
-                mCompanyRef = mCompaniesRef.child(companyName);
-
-                currencyEventListener = new BigIntegerEventListener(currencyTextView, getApplicationContext().getString(R.string.currency));
-
-                // set listener for company's currency (FOREVER!, since it will be changing!)
-                mCompanyRef.child(getString(R.string.firebase_db_currency)).addValueEventListener(currencyEventListener);
-
-                companyLevelEventListener = new BigIntegerEventListener(companyLevelTextView, getApplication().getString(R.string.company_level));
-
-                // get the company level
-                mCompanyRef.child(getResources().getString(R.string.firebase_db_level)).addValueEventListener(companyLevelEventListener);
-
-                // done loading everything, can now hide progress dialog
-                hideProgressDialog();
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
+        getUserInfo();
     }
 
     private void play() {
@@ -332,6 +320,16 @@ public class MenuActivity extends BaseActivity implements
 
         // set the currency per second to 0 (default)
         mCompanyRef.child(getString(R.string.firebase_db_currency_per_sec)).setValue("0");
+
+        // set the level to 1 (default)
+        mCompanyRef.child(getString(R.string.firebase_db_level)).setValue("1");
+
+        // set XP to 0 (default)
+        // set XP cap to 100 (default)
+        mCompanyRef.child(getString(R.string.firebase_db_xp)).setValue("0/100");
+
+        // set perk points to 0 (default)
+        mCompanyRef.child(getString(R.string.firebase_db_perk_points)).setValue("0");
 
         // set the user of the company in the company's users list
         mCompanyRef.child(getString(R.string.firebase_db_users)).child(username).setValue(true);
@@ -426,6 +424,7 @@ public class MenuActivity extends BaseActivity implements
 
                 String newCompanyName = inputCompanyName.getText().toString();
                 // step 2: join company using new company name
+                // TODO
                 
 
                 hideProgressDialog();
@@ -464,9 +463,9 @@ public class MenuActivity extends BaseActivity implements
                 // otherwise, keep company
                 showProgressDialog();
                 // remove player from users list
-                mCompanyRef.child(getString(R.string.firebase_db_users)).child(firebaseUid).removeValue();
+                mCompanyRef.child(getString(R.string.firebase_db_users)).child(username).removeValue();
                 // set company of user to null
-                mUsersRef.child(firebaseUid).removeValue();
+                mUserRef.child(getString(R.string.firebase_db_company)).removeValue();
 
                 // check to see if users list is null or not
                 mCompanyRef.child(getString(R.string.firebase_db_users)).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -477,21 +476,21 @@ public class MenuActivity extends BaseActivity implements
                             mCompanyRef.child(getString(R.string.firebase_db_currency)).removeEventListener(currencyEventListener);
                             mCompanyRef.removeValue();
                             mCompanyRef = null;
-
-                            companyNameTextView.setText(getString(R.string.company, "-----"));
-                            currencyTextView.setText(getString(R.string.currency, "0"));
-
-                            // enable create company button
-                            createNewCompanyButton.setEnabled(true);
-                            // enable join company button
-                            joinCompanyButton.setEnabled(true);
-                            // disable play button
-                            playButton.setEnabled(false);
-                            // disable invite button
-                            inviteUsersButton.setEnabled(false);
-                            // disable leave company button
-                            leaveCompanyButton.setEnabled(false);
                         }
+
+                        companyNameTextView.setText(getString(R.string.company, "-----"));
+                        currencyTextView.setText(getString(R.string.currency, "0"));
+
+                        // enable create company button
+                        createNewCompanyButton.setEnabled(true);
+                        // enable join company button
+                        joinCompanyButton.setEnabled(true);
+                        // disable play button
+                        playButton.setEnabled(false);
+                        // disable invite button
+                        inviteUsersButton.setEnabled(false);
+                        // disable leave company button
+                        leaveCompanyButton.setEnabled(false);
 
                         hideProgressDialog();
                     }

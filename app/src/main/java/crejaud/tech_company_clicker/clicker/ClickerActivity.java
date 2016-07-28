@@ -1,9 +1,11 @@
 package crejaud.tech_company_clicker.clicker;
 
 import android.app.Activity;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.google.android.gms.ads.AdRequest;
@@ -14,29 +16,39 @@ import com.google.android.gms.games.Games;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.math.BigInteger;
+
 import crejaud.tech_company_clicker.R;
 import crejaud.tech_company_clicker.handler.ClickTransactionHandler;
 import crejaud.tech_company_clicker.listener.ClickEventListener;
 import crejaud.tech_company_clicker.listener.BigIntegerEventListener;
+import crejaud.tech_company_clicker.listener.XPEventListener;
 import crejaud.tech_company_clicker.signIn.BaseActivity;
 
 public class ClickerActivity extends BaseActivity implements
         View.OnClickListener {
 
-    private TextView mCurrencyTextView;
+    private TextView mCurrencyTextView, mCompanyLevelTextView, mCompanyXPTextView,
+            mPerkPointsTextView, mUserXPTextView, mUserLevelTextView,
+            mCompanyNameTextView;
 
     // Listeners
-    private ClickEventListener clickEventListener;
-    private BigIntegerEventListener currencyEventListener;
+    private ClickEventListener currencyPerSecEventListener, currencyPerClickEventListener;
+    private BigIntegerEventListener currencyEventListener, companyLevelEventListener, perkPointsEventListener,
+            userLevelEventListener;
+    private XPEventListener companyXpEventListener, userXpEventListener;
 
     private String firebaseUid, companyName, username;
 
     private DatabaseReference mRootRef = FirebaseDatabase.getInstance().getReference();
-    private DatabaseReference mCompaniesRef = null;
+    private DatabaseReference mCompaniesRef;
     private DatabaseReference mUsersRef;
+    private DatabaseReference mUserRef;
     private DatabaseReference mCompanyRef;
 
     private GoogleApiClient mGoogleGamesApiClient;
+
+    private ProgressBar mCompanyXPProgressBar, mUserXPProgressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +72,15 @@ public class ClickerActivity extends BaseActivity implements
 
         // Views
         mCurrencyTextView = (TextView) findViewById(R.id.currency_text);
+        mCompanyLevelTextView = (TextView) findViewById(R.id.company_level_text);
+        mCompanyNameTextView = (TextView) findViewById(R.id.company_name_text);
+        mCompanyXPTextView = (TextView) findViewById(R.id.company_xp_text);
+        mPerkPointsTextView = (TextView) findViewById(R.id.perk_points_text);
+        mUserXPTextView = (TextView) findViewById(R.id.user_xp_text);
+        mUserLevelTextView = (TextView) findViewById(R.id.user_level_text);
+
+        mCompanyXPProgressBar = (ProgressBar) findViewById(R.id.company_xp_bar);
+        mUserXPProgressBar = (ProgressBar) findViewById(R.id.user_xp_bar);
 
         // Button listeners
         findViewById(R.id.clicker_button).setOnClickListener(this);
@@ -67,7 +88,6 @@ public class ClickerActivity extends BaseActivity implements
 
         // Set up the firebase listeners
         setFirebaseListeners();
-
     }
 
     private void setAds() {
@@ -85,6 +105,9 @@ public class ClickerActivity extends BaseActivity implements
         // Get company name
         companyName = getIntent().getExtras().getString(getString(R.string.intent_extra_company_name));
 
+        // set company name to text view
+        mCompanyNameTextView.setText(companyName);
+
         // Get username
         username = getIntent().getExtras().getString(getString(R.string.intent_extra_username));
 
@@ -94,22 +117,49 @@ public class ClickerActivity extends BaseActivity implements
         // ensure the user of the company is in the company's users list
         mCompanyRef.child(getString(R.string.firebase_db_users)).child(firebaseUid).setValue(true);
 
-        currencyEventListener = new BigIntegerEventListener(mCurrencyTextView, getString(R.string.currency));
-
         // set listener for company's currency (FOREVER!, since it will be changing!)
+        currencyEventListener = new BigIntegerEventListener(mCurrencyTextView, getString(R.string.currency));
         mCompanyRef.child(getString(R.string.firebase_db_currency)).addValueEventListener(currencyEventListener);
 
-        clickEventListener = new ClickEventListener();
-
         // set listener for company's currency per second (FOREVER!, since it will be changing!)
-        mCompanyRef.child(getString(R.string.firebase_db_currency_per_click)).addValueEventListener(clickEventListener);
+        currencyPerSecEventListener = new ClickEventListener();
+        mCompanyRef.child(getString(R.string.firebase_db_currency_per_sec)).addValueEventListener(currencyPerSecEventListener);
+
+        // set listener for company's xp (FOREVER!, since it will be changing!)
+        companyXpEventListener = new XPEventListener(mCompanyXPTextView, mCompanyRef.child(getString(R.string.firebase_db_level)),
+                mCompanyRef.child(getString(R.string.firebase_db_xp)), mCompanyRef.child(getString(R.string.firebase_db_perk_points)), null, mCompanyXPProgressBar);
+        mCompanyRef.child(getString(R.string.firebase_db_xp)).addValueEventListener(companyXpEventListener);
+
+        // set listener for company's level (FOREVER!, since it will be changing!)
+        companyLevelEventListener = new BigIntegerEventListener(mCompanyLevelTextView, getString(R.string.company_level));
+        mCompanyRef.child(getString(R.string.firebase_db_level)).addValueEventListener(companyLevelEventListener);
+
+        // set listener for company's perk points (FOREVER!, since it will be changing!)
+        perkPointsEventListener = new BigIntegerEventListener(mPerkPointsTextView, getString(R.string.perk_points));
+        mCompanyRef.child(getString(R.string.firebase_db_perk_points)).addValueEventListener(perkPointsEventListener);
+
+        // get the user ref using the username!
+        mUserRef = mUsersRef.child(username);
+
+        // set listener for user's xp (FOREVER!, since it will be changing!)
+        userXpEventListener = new XPEventListener(mUserXPTextView, mUserRef.child(getString(R.string.firebase_db_level)),
+                mUserRef.child(getString(R.string.firebase_db_xp)), null, mUserRef.child(getString(R.string.firebase_db_currency_per_click)), mUserXPProgressBar);
+        mUserRef.child(getString(R.string.firebase_db_xp)).addValueEventListener(userXpEventListener);
+
+        // set listener for company's level (FOREVER!, since it will be changing!)
+        userLevelEventListener = new BigIntegerEventListener(mUserLevelTextView, username + "level : %s");
+        mUserRef.child(getString(R.string.firebase_db_level)).addValueEventListener(userLevelEventListener);
+
+        // set listener for company's user's currency per click (FOREVER!, since it will be changing!)
+        currencyPerClickEventListener = new ClickEventListener();
+        mUserRef.child(getString(R.string.firebase_db_currency_per_click)).addValueEventListener(currencyPerClickEventListener);
 
         hideProgressDialog();
     }
 
     private void incrementCurrencyFromClick() {
         Log.d("CurrentPlayerInClicker", Games.Players.getCurrentPlayer(mGoogleGamesApiClient).getDisplayName());
-        mCompanyRef.child(getString(R.string.firebase_db_currency)).runTransaction(new ClickTransactionHandler(clickEventListener));
+        mCompanyRef.child(getString(R.string.firebase_db_currency)).runTransaction(new ClickTransactionHandler(currencyPerClickEventListener, mUserRef.child(getString(R.string.firebase_db_xp))));
     }
 
     private void signOut() {

@@ -2,7 +2,6 @@ package crejaud.tech_company_clicker.handler;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
 
@@ -11,17 +10,15 @@ import java.math.BigInteger;
 import crejaud.tech_company_clicker.listener.ClickEventListener;
 
 /**
- * Created by creja_000 on 7/24/2016.
+ * Created by creja_000 on 7/27/2016.
  */
 
-public class ClickTransactionHandler implements Transaction.Handler {
+public class XPTransactionHandler implements Transaction.Handler {
 
-    private ClickEventListener clickEventListener;
-    private DatabaseReference mUserXPRef;
+    private BigInteger xpGain;
 
-    public ClickTransactionHandler(ClickEventListener clickEventListener, DatabaseReference mUserXPRef) {
-        this.clickEventListener = clickEventListener;
-        this.mUserXPRef = mUserXPRef;
+    public XPTransactionHandler(BigInteger xpGain) {
+        this.xpGain = xpGain;
     }
 
     @Override
@@ -30,15 +27,14 @@ public class ClickTransactionHandler implements Transaction.Handler {
             mutableData.setValue("0");
         }
         else {
-            BigInteger newCurrency = new BigInteger(mutableData.getValue(String.class));
+            BigInteger currentXp = new BigInteger(mutableData.getValue(String.class).split("/")[0]);
             try {
-                newCurrency = newCurrency.add(clickEventListener.getCurrencyPerClick());
-                mUserXPRef.runTransaction(new XPTransactionHandler(clickEventListener.getCurrencyPerClick()));
+                currentXp = currentXp.add(xpGain);
             } catch (ArithmeticException e) {
                 // Long overflows above max big int
             }
 
-            mutableData.setValue(newCurrency.toString());
+            mutableData.setValue(currentXp.toString() + "/" + mutableData.getValue(String.class).split("/")[1]);
         }
         return Transaction.success(mutableData);
     }
@@ -47,4 +43,5 @@ public class ClickTransactionHandler implements Transaction.Handler {
     public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
         //uhhh?
     }
+
 }

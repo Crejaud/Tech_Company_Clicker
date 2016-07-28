@@ -55,6 +55,7 @@
     <string name="company">Company: %s</string>
     <string name="currency">Currency: %s</string>
     <string name="company_level">Company Level: %s</string>
+    <string name="perk_points">Perk Points: %s</string>
     <string name="play">Play</string>
     <string name="create_new_company">Create New Company</string>
     <string name="join_company">Join an existing Company</string>
@@ -80,10 +81,8 @@
 
     <string name="firebase_db_level">level</string>
     <string name="firebase_db_xp">xp</string>
-    <string name="firebase_db_xp_to_level">xpToLevel</string>
     <string name="firebase_db_perks">perks</string>
     <string name="firebase_db_perk_points">perkPoints</string>
-
     <string name="firebase_db_users">users</string>
     <string name="firebase_db_company">company</string>
     <string name="firebase_db_currency_per_click">currencyPerClick</string>
