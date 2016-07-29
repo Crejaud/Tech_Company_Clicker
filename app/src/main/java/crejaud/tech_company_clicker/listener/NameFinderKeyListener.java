@@ -15,10 +15,12 @@ public class NameFinderKeyListener implements View.OnKeyListener {
 
     private DatabaseReference namesRef;
     private AlertDialog alertDialog;
+    private boolean inclusion;
 
-    public NameFinderKeyListener(DatabaseReference namesRef, AlertDialog alertDialog) {
+    public NameFinderKeyListener(DatabaseReference namesRef, AlertDialog alertDialog, boolean inclusion) {
         this.namesRef = namesRef;
         this.alertDialog = alertDialog;
+        this.inclusion = inclusion;
     }
 
     @Override
@@ -27,7 +29,7 @@ public class NameFinderKeyListener implements View.OnKeyListener {
         alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
 
         // on every keystroke, check to see if company name exists
-        namesRef.addListenerForSingleValueEvent(new NameFinderEventListener(view, alertDialog));
+        namesRef.addListenerForSingleValueEvent(new NameFinderEventListener(view, alertDialog, inclusion));
         return false;
     }
 }

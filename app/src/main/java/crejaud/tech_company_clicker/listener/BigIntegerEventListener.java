@@ -31,6 +31,10 @@ public class BigIntegerEventListener implements ValueEventListener {
         this.prefix = prefix;
     }
 
+    public BigInteger getNum() {
+        return num;
+    }
+
     @Override
     public void onDataChange(DataSnapshot dataSnapshot) {
         if (dataSnapshot.getValue() == null) {

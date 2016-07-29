@@ -54,6 +54,8 @@
 
     <string name="company">Company: %s</string>
     <string name="currency">Currency: %s</string>
+    <string name="currency_per_sec">$/second: %s</string>
+    <string name="currency_per_click">$/click: %s</string>
     <string name="company_level">Company Level: %s</string>
     <string name="perk_points">Perk Points: %s</string>
     <string name="play">Play</string>

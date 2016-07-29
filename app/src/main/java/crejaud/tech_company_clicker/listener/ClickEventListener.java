@@ -25,10 +25,6 @@ public class ClickEventListener implements ValueEventListener {
         return currencyPerClick;
     }
 
-    public void setCurrencyPerClick(BigInteger newCurrencyPerClick) {
-        this.currencyPerClick = newCurrencyPerClick;
-    }
-
     @Override
     public void onDataChange(DataSnapshot dataSnapshot) {
         if (dataSnapshot.getValue() == null) {

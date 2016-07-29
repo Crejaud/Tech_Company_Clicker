@@ -8,20 +8,21 @@ import com.google.firebase.database.Transaction;
 
 import java.math.BigInteger;
 
+import crejaud.tech_company_clicker.listener.BigIntegerEventListener;
 import crejaud.tech_company_clicker.listener.ClickEventListener;
 
 /**
  * Created by creja_000 on 7/24/2016.
  */
 
-public class ClickTransactionHandler implements Transaction.Handler {
+public class IncreaseCurrencyTransactionHandler implements Transaction.Handler {
 
-    private ClickEventListener clickEventListener;
-    private DatabaseReference mUserXPRef;
+    private BigIntegerEventListener eventListener;
+    private DatabaseReference mXPRef;
 
-    public ClickTransactionHandler(ClickEventListener clickEventListener, DatabaseReference mUserXPRef) {
-        this.clickEventListener = clickEventListener;
-        this.mUserXPRef = mUserXPRef;
+    public IncreaseCurrencyTransactionHandler(BigIntegerEventListener eventListener, DatabaseReference mXPRef) {
+        this.eventListener = eventListener;
+        this.mXPRef = mXPRef;
     }
 
     @Override
@@ -32,8 +33,8 @@ public class ClickTransactionHandler implements Transaction.Handler {
         else {
             BigInteger newCurrency = new BigInteger(mutableData.getValue(String.class));
             try {
-                newCurrency = newCurrency.add(clickEventListener.getCurrencyPerClick());
-                mUserXPRef.runTransaction(new XPTransactionHandler(clickEventListener.getCurrencyPerClick()));
+                newCurrency = newCurrency.add(eventListener.getNum());
+                mXPRef.runTransaction(new XPTransactionHandler(eventListener.getNum()));
             } catch (ArithmeticException e) {
                 // Long overflows above max big int
             }

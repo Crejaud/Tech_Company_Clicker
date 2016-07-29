@@ -228,7 +228,7 @@ public class MenuActivity extends BaseActivity implements
         inputUsername.setTextColor(Color.RED);
 
         // set key listener for edit text
-        inputUsername.setOnKeyListener(new NameFinderKeyListener(mUsersRef, alertDialog));
+        inputUsername.setOnKeyListener(new NameFinderKeyListener(mUsersRef, alertDialog, false));
     }
 
     private void createUsername(String newUsername) {
@@ -300,7 +300,7 @@ public class MenuActivity extends BaseActivity implements
         inputCompanyName.setTextColor(Color.RED);
 
         // set key listener for edit text
-        inputCompanyName.setOnKeyListener(new NameFinderKeyListener(mCompaniesRef, alertDialog));
+        inputCompanyName.setOnKeyListener(new NameFinderKeyListener(mCompaniesRef, alertDialog, false));
     }
 
     private void createCompany(String newCompanyName) {
@@ -371,7 +371,7 @@ public class MenuActivity extends BaseActivity implements
         builder.setView(inputUsername);
 
         // Set up the buttons
-        builder.setPositiveButton("CREATE", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton("INVITE", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // show progress dialog, while loading everything
@@ -380,6 +380,10 @@ public class MenuActivity extends BaseActivity implements
                 String invitedUser = inputUsername.getText().toString();
                 // Step 2: invite the user
                 // TODO
+                // TEMPORARY
+                // force user into company
+                mCompanyRef.child(getString(R.string.firebase_db_users)).child(invitedUser).setValue(true);
+                mUsersRef.child(invitedUser).child(getString(R.string.firebase_db_company)).setValue(companyName);
 
                 hideProgressDialog();
             }
@@ -400,7 +404,7 @@ public class MenuActivity extends BaseActivity implements
         inputUsername.setTextColor(Color.RED);
 
         // set key listener for edit text
-        inputUsername.setOnKeyListener(new NameFinderKeyListener(mUsersRef, alertDialog));
+        inputUsername.setOnKeyListener(new NameFinderKeyListener(mUsersRef, alertDialog, true));
     }
 
     private void joinCompany() {
@@ -425,7 +429,42 @@ public class MenuActivity extends BaseActivity implements
                 String newCompanyName = inputCompanyName.getText().toString();
                 // step 2: join company using new company name
                 // TODO
-                
+                // TEMPORARY
+                // FORCE user into company
+                mCompaniesRef.child(newCompanyName).child(getString(R.string.firebase_db_users)).child(username).setValue(true);
+                mUserRef.child(getString(R.string.firebase_db_company)).setValue(newCompanyName);
+
+                // get new company name
+                companyName = newCompanyName;
+
+                // set Company Name Text
+                companyNameTextView.setText(getString(R.string.company, companyName));
+
+                // get the company ref using the company name!
+                mCompanyRef = mCompaniesRef.child(companyName);
+
+                // create currency listener
+                currencyEventListener = new BigIntegerEventListener(currencyTextView, getApplicationContext().getString(R.string.currency));
+
+                // set listener for company's currency (FOREVER!, since it will be changing!)
+                mCompanyRef.child(getString(R.string.firebase_db_currency)).addValueEventListener(currencyEventListener);
+
+                // create company level listener
+                companyLevelEventListener = new BigIntegerEventListener(companyLevelTextView, getApplication().getString(R.string.company_level));
+
+                // set listener for company's level (FOREVER!, since it will be changing!)
+                mCompanyRef.child(getResources().getString(R.string.firebase_db_level)).addValueEventListener(companyLevelEventListener);
+
+                // disable create company button
+                createNewCompanyButton.setEnabled(false);
+                // disable join company button
+                joinCompanyButton.setEnabled(false);
+                // enable play button
+                playButton.setEnabled(true);
+                // enable invite button
+                inviteUsersButton.setEnabled(true);
+                // enable leave company button
+                leaveCompanyButton.setEnabled(true);
 
                 hideProgressDialog();
             }
@@ -446,7 +485,7 @@ public class MenuActivity extends BaseActivity implements
         inputCompanyName.setTextColor(Color.RED);
 
         // set key listener for edit text
-        inputCompanyName.setOnKeyListener(new NameFinderKeyListener(mCompaniesRef, alertDialog));
+        inputCompanyName.setOnKeyListener(new NameFinderKeyListener(mCompaniesRef, alertDialog, true));
     }
 
     private void leaveCompany() {
@@ -479,7 +518,8 @@ public class MenuActivity extends BaseActivity implements
                         }
 
                         companyNameTextView.setText(getString(R.string.company, "-----"));
-                        currencyTextView.setText(getString(R.string.currency, "0"));
+                        currencyTextView.setText(getString(R.string.currency, "-"));
+                        companyLevelTextView.setText(getString(R.string.company_level, "-"));
 
                         // enable create company button
                         createNewCompanyButton.setEnabled(true);

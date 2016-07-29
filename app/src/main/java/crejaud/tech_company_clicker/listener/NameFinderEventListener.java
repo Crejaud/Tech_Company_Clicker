@@ -17,28 +17,48 @@ public class NameFinderEventListener implements ValueEventListener {
 
     private EditText name;
     private AlertDialog alertDialog;
+    private boolean inclusion;
 
-    public NameFinderEventListener(View view, AlertDialog alertDialog) {
+    public NameFinderEventListener(View view, AlertDialog alertDialog, boolean inclusion) {
         name = (EditText) view;
         this.alertDialog = alertDialog;
+        this.inclusion = inclusion;
     }
 
     @Override
     public void onDataChange(DataSnapshot dataSnapshot) {
 
-        // if company name exists, is empty, or is too long, then set text to RED, set hint text, and set create button to be disabled
-        if (name.getText().toString().isEmpty() || dataSnapshot.hasChild(name.getText().toString())) {
-            // set text color to red
-            name.setTextColor(Color.RED);
-            // set create button disabled
-            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+        if (!inclusion) {
+            // if company name exists, is empty, or is too long, then set text to RED, set hint text, and set create button to be disabled
+            if ((name.getText().toString().isEmpty() || dataSnapshot.hasChild(name.getText().toString()))) {
+                // set text color to red
+                name.setTextColor(Color.RED);
+                // set create button disabled
+                alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+            }
+            // if company name does not exist, then set text to GREEN, set hint text, and set create button to be enabled
+            else {
+                // set text color to green
+                name.setTextColor(Color.GREEN);
+                // set create button enabled
+                alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+            }
         }
-        // if company name does not exist, then set text to GREEN, set hint text, and set create button to be enabled
         else {
-            // set text color to green
-            name.setTextColor(Color.GREEN);
-            // set create button enabled
-            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+            // if company name exists, is empty, or is too long, then set text to RED, set hint text, and set create button to be disabled
+            if ((name.getText().toString().isEmpty() || dataSnapshot.hasChild(name.getText().toString()))) {
+                // set text color to green
+                name.setTextColor(Color.GREEN);
+                // set create button enabled
+                alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
+            }
+            // if company name does not exist, then set text to GREEN, set hint text, and set create button to be enabled
+            else {
+                // set text color to red
+                name.setTextColor(Color.RED);
+                // set create button disabled
+                alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+            }
         }
     }
 

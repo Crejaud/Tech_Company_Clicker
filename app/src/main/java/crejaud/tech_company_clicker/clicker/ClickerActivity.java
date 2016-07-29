@@ -1,7 +1,6 @@
 package crejaud.tech_company_clicker.clicker;
 
 import android.app.Activity;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -16,11 +15,8 @@ import com.google.android.gms.games.Games;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import java.math.BigInteger;
-
 import crejaud.tech_company_clicker.R;
-import crejaud.tech_company_clicker.handler.ClickTransactionHandler;
-import crejaud.tech_company_clicker.listener.ClickEventListener;
+import crejaud.tech_company_clicker.handler.IncreaseCurrencyTransactionHandler;
 import crejaud.tech_company_clicker.listener.BigIntegerEventListener;
 import crejaud.tech_company_clicker.listener.XPEventListener;
 import crejaud.tech_company_clicker.signIn.BaseActivity;
@@ -30,12 +26,11 @@ public class ClickerActivity extends BaseActivity implements
 
     private TextView mCurrencyTextView, mCompanyLevelTextView, mCompanyXPTextView,
             mPerkPointsTextView, mUserXPTextView, mUserLevelTextView,
-            mCompanyNameTextView;
+            mCompanyNameTextView, mCurrencyPerSecTextView, mCurrencyPerClickTextView;
 
     // Listeners
-    private ClickEventListener currencyPerSecEventListener, currencyPerClickEventListener;
     private BigIntegerEventListener currencyEventListener, companyLevelEventListener, perkPointsEventListener,
-            userLevelEventListener;
+            userLevelEventListener, currencyPerSecEventListener, currencyPerClickEventListener;
     private XPEventListener companyXpEventListener, userXpEventListener;
 
     private String firebaseUid, companyName, username;
@@ -49,6 +44,9 @@ public class ClickerActivity extends BaseActivity implements
     private GoogleApiClient mGoogleGamesApiClient;
 
     private ProgressBar mCompanyXPProgressBar, mUserXPProgressBar;
+
+    private CurrencyPerSecRunnable currencyPerSecRunnable;
+    private Thread currencyPerSecThread = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,9 +73,11 @@ public class ClickerActivity extends BaseActivity implements
         mCompanyLevelTextView = (TextView) findViewById(R.id.company_level_text);
         mCompanyNameTextView = (TextView) findViewById(R.id.company_name_text);
         mCompanyXPTextView = (TextView) findViewById(R.id.company_xp_text);
+        mCurrencyPerSecTextView = (TextView) findViewById(R.id.currency_per_sec_text);
         mPerkPointsTextView = (TextView) findViewById(R.id.perk_points_text);
         mUserXPTextView = (TextView) findViewById(R.id.user_xp_text);
         mUserLevelTextView = (TextView) findViewById(R.id.user_level_text);
+        mCurrencyPerClickTextView = (TextView) findViewById(R.id.currency_per_click_text);
 
         mCompanyXPProgressBar = (ProgressBar) findViewById(R.id.company_xp_bar);
         mUserXPProgressBar = (ProgressBar) findViewById(R.id.user_xp_bar);
@@ -122,7 +122,7 @@ public class ClickerActivity extends BaseActivity implements
         mCompanyRef.child(getString(R.string.firebase_db_currency)).addValueEventListener(currencyEventListener);
 
         // set listener for company's currency per second (FOREVER!, since it will be changing!)
-        currencyPerSecEventListener = new ClickEventListener();
+        currencyPerSecEventListener = new BigIntegerEventListener(mCurrencyPerSecTextView, getString(R.string.currency_per_sec));
         mCompanyRef.child(getString(R.string.firebase_db_currency_per_sec)).addValueEventListener(currencyPerSecEventListener);
 
         // set listener for company's xp (FOREVER!, since it will be changing!)
@@ -138,6 +138,12 @@ public class ClickerActivity extends BaseActivity implements
         perkPointsEventListener = new BigIntegerEventListener(mPerkPointsTextView, getString(R.string.perk_points));
         mCompanyRef.child(getString(R.string.firebase_db_perk_points)).addValueEventListener(perkPointsEventListener);
 
+        // create currency per sec runnable thread
+        currencyPerSecRunnable = new CurrencyPerSecRunnable(currencyPerSecEventListener, mCompanyRef.child(getString(R.string.firebase_db_currency)),
+                mCompanyRef.child(getString(R.string.firebase_db_xp)));
+        currencyPerSecThread = new Thread(currencyPerSecRunnable);
+        currencyPerSecThread.start();
+
         // get the user ref using the username!
         mUserRef = mUsersRef.child(username);
 
@@ -151,7 +157,7 @@ public class ClickerActivity extends BaseActivity implements
         mUserRef.child(getString(R.string.firebase_db_level)).addValueEventListener(userLevelEventListener);
 
         // set listener for company's user's currency per click (FOREVER!, since it will be changing!)
-        currencyPerClickEventListener = new ClickEventListener();
+        currencyPerClickEventListener = new BigIntegerEventListener(mCurrencyPerClickTextView, getString(R.string.currency_per_click));
         mUserRef.child(getString(R.string.firebase_db_currency_per_click)).addValueEventListener(currencyPerClickEventListener);
 
         hideProgressDialog();
@@ -159,7 +165,7 @@ public class ClickerActivity extends BaseActivity implements
 
     private void incrementCurrencyFromClick() {
         Log.d("CurrentPlayerInClicker", Games.Players.getCurrentPlayer(mGoogleGamesApiClient).getDisplayName());
-        mCompanyRef.child(getString(R.string.firebase_db_currency)).runTransaction(new ClickTransactionHandler(currencyPerClickEventListener, mUserRef.child(getString(R.string.firebase_db_xp))));
+        mCompanyRef.child(getString(R.string.firebase_db_currency)).runTransaction(new IncreaseCurrencyTransactionHandler(currencyPerClickEventListener, mUserRef.child(getString(R.string.firebase_db_xp))));
     }
 
     private void signOut() {
@@ -184,5 +190,17 @@ public class ClickerActivity extends BaseActivity implements
                 signOut();
                 break;
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        currencyPerSecThread.interrupt();
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        finish();
     }
 }

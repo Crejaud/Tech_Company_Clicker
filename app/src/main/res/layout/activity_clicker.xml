@@ -4,6 +4,9 @@
     android:id="@+id/main_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_vertical_margin"
+    android:paddingRight="@dimen/activity_vertical_margin"
     android:background="@color/grey_100"
     android:orientation="vertical">
 
@@ -24,19 +27,28 @@
         android:layout_below="@+id/currency_text"
         android:id="@+id/company_name_text" />
 
+    <TextView
+        android:text="@string/currency_per_sec"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_below="@+id/company_name_text"
+        android:id="@+id/currency_per_sec_text" />
+
 
     <TextView
         android:text="@string/company_level"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:layout_below="@+id/company_name_text"
+        android:layout_below="@+id/currency_per_sec_text"
         android:id="@+id/company_level_text" />
 
     <ProgressBar
+        android:progressDrawable="@drawable/customprogressbar"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="30dp"
         android:max="100"
         android:foregroundGravity="center"
         android:layout_below="@+id/company_level_text"
@@ -64,17 +76,26 @@
         android:id="@+id/perk_points_text" />
 
     <TextView
-        android:text="@string/company_level"
+        android:text="@string/currency_per_click"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:layout_below="@+id/perk_points_text"
+        android:id="@+id/currency_per_click_text" />
+
+    <TextView
+        android:text="@string/company_level"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_below="@+id/currency_per_click_text"
         android:id="@+id/user_level_text" />
 
     <ProgressBar
+        android:progressDrawable="@drawable/customprogressbar"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="30dp"
         android:max="100"
         android:foregroundGravity="center"
         android:layout_below="@+id/user_level_text"
