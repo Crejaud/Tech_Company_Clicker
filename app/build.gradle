@@ -10,6 +10,7 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true  // this line will solve this problem
     }
     buildTypes {
         release {
@@ -32,7 +33,9 @@ dependencies {
     compile 'com.google.firebase:firebase-ads:9.2.1'
     compile 'com.google.android.gms:play-services-auth:9.2.1'
     compile 'com.google.android.gms:play-services-games:9.2.1'
+    compile 'com.google.android.gms:play-services-ads:9.2.1'
     testCompile 'junit:junit:4.12'
+    compile project(':BaseGameUtils')
 }
 
 apply plugin: 'com.google.gms.google-services'

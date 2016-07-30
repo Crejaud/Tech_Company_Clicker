@@ -19,8 +19,8 @@ public class NameFinderEventListener implements ValueEventListener {
     private AlertDialog alertDialog;
     private boolean inclusion;
 
-    public NameFinderEventListener(View view, AlertDialog alertDialog, boolean inclusion) {
-        name = (EditText) view;
+    public NameFinderEventListener(EditText editText, AlertDialog alertDialog, boolean inclusion) {
+        name = editText;
         this.alertDialog = alertDialog;
         this.inclusion = inclusion;
     }

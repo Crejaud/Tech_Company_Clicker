@@ -20,6 +20,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -50,6 +51,7 @@ import crejaud.tech_company_clicker.menu.MenuActivity;
  * Demonstrate Firebase Authentication using a Google ID Token.
  */
 public class SignInActivity extends BaseActivity implements
+        GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         View.OnClickListener {
 
@@ -68,7 +70,7 @@ public class SignInActivity extends BaseActivity implements
     private FirebaseAuth.AuthStateListener mAuthListener;
     // [END declare_auth_listener]
 
-    private GoogleApiClient mGoogleApiClient, mGoogleGamesApiClient;
+    private GoogleApiClient mGoogleApiClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -220,14 +222,6 @@ public class SignInActivity extends BaseActivity implements
         Log.d("LOGIN", "Successful Sign Out");
     }
 
-    private void revokeAccess() {
-        // Firebase sign out
-        mAuth.signOut();
-
-        // Google revoke access
-        Auth.GoogleSignInApi.revokeAccess(mGoogleApiClient);
-    }
-
     private void goToMenu(FirebaseUser user) {
         hideProgressDialog();
         if (user != null) {
@@ -253,5 +247,15 @@ public class SignInActivity extends BaseActivity implements
                 signIn();
                 break;
         }
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
     }
 }

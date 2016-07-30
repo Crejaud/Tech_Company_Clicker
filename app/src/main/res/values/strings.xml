@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Tech World Clicker</string>
-    <string name="app_id">145996210883</string>
 
     <string name="label_google_sign_in">Firebase + Google Sign In</string>
     <string name="desc_google_sign_in">Use a Google Sign In credential to authenticate with Firebase.</string>
@@ -32,25 +31,6 @@
     <string name="token_null">Token: null</string>
     <string name="hint_email">Email</string>
     <string name="hint_password">Password</string>
-    <string name="desc_firebase_lockup">Firebase logo and name</string>
-
-    <string name="firebase_status_fmt">Firebase User: %s</string>
-    <string name="firebase_user_management">Firebase User Management</string>
-
-    <string name="google_status_fmt">Google User: %s</string>
-    <string name="google_title_text">Google Sign In</string>
-
-    <string name="facebook_status_fmt">Facebook User: %s</string>
-    <string name="facebook_title_text">Facebook Login</string>
-
-    <string name="emailpassword_status_fmt">Email User: %s</string>
-    <string name="emailpassword_title_text">Email and Password</string>
-
-    <string name="twitter_status_fmt">Twitter User: %s</string>
-    <string name="twitter_title_text">Twitter Login</string>
-
-    <string name="id_fmt">User ID: %s</string>
-    <string name="email_fmt">Email: %s</string>
 
     <string name="company">Company: %s</string>
     <string name="currency">Currency: %s</string>
@@ -96,4 +76,6 @@
 
     <string name="leaderboards_company_level_id">CgkIw8W18J8EEAIQAw</string>
     <string name="leaderboards_player_level_id">CgkIw8W18J8EEAIQAg</string>
+
+    <string name="signin_other_error">Error signing in with google play</string>
 </resources>

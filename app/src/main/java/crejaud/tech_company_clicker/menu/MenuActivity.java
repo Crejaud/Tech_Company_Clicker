@@ -3,9 +3,12 @@ package crejaud.tech_company_clicker.menu;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.os.Bundle;
 import android.text.InputType;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -14,8 +17,10 @@ import android.widget.TextView;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.games.Games;
+import com.google.example.games.basegameutils.BaseGameUtils;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -24,17 +29,31 @@ import com.google.firebase.database.ValueEventListener;
 
 import crejaud.tech_company_clicker.R;
 import crejaud.tech_company_clicker.clicker.ClickerActivity;
-import crejaud.tech_company_clicker.listener.ClickEventListener;
 import crejaud.tech_company_clicker.listener.NameFinderKeyListener;
 import crejaud.tech_company_clicker.listener.BigIntegerEventListener;
 import crejaud.tech_company_clicker.signIn.BaseActivity;
 import crejaud.tech_company_clicker.signIn.SignInActivity;
 
 public class MenuActivity extends BaseActivity implements
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
         View.OnClickListener{
 
     private static int REQUEST_ACHIEVEMENTS = 9004;
     private static int REQUEST_LEADERBOARD = 9005;
+    private static int RC_SIGN_IN = 9006;
+
+    private static final String TAG = "MainMenu";
+
+    // Are we currently resolving a connection failure?
+    private boolean mResolvingConnectionFailure = false;
+
+    // Has the user clicked the sign-in button?
+    private boolean mSignInClicked = false;
+
+    // Set to true to automatically start the sign in flow when the Activity starts.
+    // Set to false to require the user to click the button in order to sign in.
+    private boolean mAutoStartSignInFlow = true;
 
     private TextView companyNameTextView, currencyTextView, companyLevelTextView;
 
@@ -63,6 +82,8 @@ public class MenuActivity extends BaseActivity implements
 
         // connect to google play games api client
         mGoogleGamesApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
                 .addApi(Games.API).addScope(Games.SCOPE_GAMES)
                 .build();
         mGoogleGamesApiClient.connect();
@@ -228,7 +249,7 @@ public class MenuActivity extends BaseActivity implements
         inputUsername.setTextColor(Color.RED);
 
         // set key listener for edit text
-        inputUsername.setOnKeyListener(new NameFinderKeyListener(mUsersRef, alertDialog, false));
+        inputUsername.addTextChangedListener(new NameFinderKeyListener(inputUsername, mUsersRef, alertDialog, false));
     }
 
     private void createUsername(String newUsername) {
@@ -300,7 +321,7 @@ public class MenuActivity extends BaseActivity implements
         inputCompanyName.setTextColor(Color.RED);
 
         // set key listener for edit text
-        inputCompanyName.setOnKeyListener(new NameFinderKeyListener(mCompaniesRef, alertDialog, false));
+        inputCompanyName.addTextChangedListener(new NameFinderKeyListener(inputCompanyName, mCompaniesRef, alertDialog, false));
     }
 
     private void createCompany(String newCompanyName) {
@@ -404,7 +425,7 @@ public class MenuActivity extends BaseActivity implements
         inputUsername.setTextColor(Color.RED);
 
         // set key listener for edit text
-        inputUsername.setOnKeyListener(new NameFinderKeyListener(mUsersRef, alertDialog, true));
+        inputUsername.addTextChangedListener(new NameFinderKeyListener(inputUsername, mUsersRef, alertDialog, true));
     }
 
     private void joinCompany() {
@@ -485,7 +506,7 @@ public class MenuActivity extends BaseActivity implements
         inputCompanyName.setTextColor(Color.RED);
 
         // set key listener for edit text
-        inputCompanyName.setOnKeyListener(new NameFinderKeyListener(mCompaniesRef, alertDialog, true));
+        inputCompanyName.addTextChangedListener(new NameFinderKeyListener(inputCompanyName, mCompaniesRef, alertDialog, true));
     }
 
     private void leaveCompany() {
@@ -568,8 +589,21 @@ public class MenuActivity extends BaseActivity implements
 
         if (requestCode == SignInActivity.RC_SIGN_OUT) {
             if (resultCode == RESULT_OK) {
+                mGoogleGamesApiClient.disconnect();
                 setResult(resultCode);
                 finish();
+            }
+        }
+
+        if (requestCode == RC_SIGN_IN) {
+            Log.d(TAG, "onActivityResult with requestCode == RC_SIGN_IN, responseCode="
+                    + resultCode + ", intent=" + data);
+            mSignInClicked = false;
+            mResolvingConnectionFailure = false;
+            if (resultCode == RESULT_OK) {
+                mGoogleGamesApiClient.connect();
+            } else {
+                BaseGameUtils.showActivityResultError(this,requestCode,resultCode, R.string.signin_other_error);
             }
         }
     }
@@ -598,6 +632,30 @@ public class MenuActivity extends BaseActivity implements
             case R.id.leaderboards_button:
                 goToLeaderboards();
                 break;
+        }
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.d(TAG, mGoogleGamesApiClient.isConnected()+ "");
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        mGoogleGamesApiClient.connect();
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        if (mResolvingConnectionFailure) {
+            Log.d(TAG, "onConnectionFailed() ignoring connection failure; already resolving.");
+            return;
+        }
+
+        if (mAutoStartSignInFlow) {
+            mAutoStartSignInFlow = false;
+            mResolvingConnectionFailure = BaseGameUtils.resolveConnectionFailure(this, mGoogleGamesApiClient,
+                    connectionResult, RC_SIGN_IN, getString(R.string.signin_other_error));
         }
     }
 }
