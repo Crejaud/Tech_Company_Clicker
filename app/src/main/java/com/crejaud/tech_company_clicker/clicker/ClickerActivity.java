@@ -1,4 +1,4 @@
-package crejaud.tech_company_clicker.clicker;
+package com.crejaud.tech_company_clicker.clicker;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -15,11 +15,11 @@ import com.google.android.gms.games.Games;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import crejaud.tech_company_clicker.R;
-import crejaud.tech_company_clicker.handler.IncreaseCurrencyTransactionHandler;
-import crejaud.tech_company_clicker.listener.BigIntegerEventListener;
-import crejaud.tech_company_clicker.listener.XPEventListener;
-import crejaud.tech_company_clicker.signIn.BaseActivity;
+import com.crejaud.tech_company_clicker.R;
+import com.crejaud.tech_company_clicker.handler.IncreaseCurrencyTransactionHandler;
+import com.crejaud.tech_company_clicker.listener.BigIntegerEventListener;
+import com.crejaud.tech_company_clicker.listener.XPEventListener;
+import com.crejaud.tech_company_clicker.signIn.BaseActivity;
 
 public class ClickerActivity extends BaseActivity implements
         View.OnClickListener {

@@ -1,6 +1,4 @@
-package crejaud.tech_company_clicker.handler;
-
-import android.util.Log;
+package com.crejaud.tech_company_clicker.handler;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -8,19 +6,19 @@ import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
 
 import java.math.BigInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+
+import com.crejaud.tech_company_clicker.listener.ClickEventListener;
 
 /**
  * Created by creja_000 on 7/27/2016.
  */
 
-public class IncreaseCurrencyPerClickTransactionHandler implements Transaction.Handler {
+public class XPTransactionHandler implements Transaction.Handler {
 
-    private ReentrantLock lock;
+    private BigInteger xpGain;
 
-    public IncreaseCurrencyPerClickTransactionHandler(ReentrantLock lock) {
-        this.lock = lock;
+    public XPTransactionHandler(BigInteger xpGain) {
+        this.xpGain = xpGain;
     }
 
     @Override
@@ -29,21 +27,21 @@ public class IncreaseCurrencyPerClickTransactionHandler implements Transaction.H
             mutableData.setValue("0");
         }
         else {
-            BigInteger newCurrencyPerClick = new BigInteger(mutableData.getValue(String.class));
+            BigInteger currentXp = new BigInteger(mutableData.getValue(String.class).split("/")[0]);
             try {
-                newCurrencyPerClick = newCurrencyPerClick.add(new BigInteger("4"));
+                currentXp = currentXp.add(xpGain);
             } catch (ArithmeticException e) {
                 // Long overflows above max big int
             }
 
-            mutableData.setValue(newCurrencyPerClick.toString());
+            mutableData.setValue(currentXp.toString() + "/" + mutableData.getValue(String.class).split("/")[1]);
         }
         return Transaction.success(mutableData);
     }
 
     @Override
     public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
-        lock.unlock();
-        Log.d("Lock", "Unlocked");
+        //uhhh?
     }
+
 }

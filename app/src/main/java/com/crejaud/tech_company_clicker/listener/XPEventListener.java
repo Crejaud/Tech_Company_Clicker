@@ -1,4 +1,4 @@
-package crejaud.tech_company_clicker.listener;
+package com.crejaud.tech_company_clicker.listener;
 
 import android.animation.ObjectAnimator;
 import android.content.Context;
@@ -19,8 +19,8 @@ import java.util.Locale;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import crejaud.tech_company_clicker.R;
-import crejaud.tech_company_clicker.handler.LevelUpTransactionHandler;
+import com.crejaud.tech_company_clicker.R;
+import com.crejaud.tech_company_clicker.handler.LevelUpTransactionHandler;
 
 /**
  * Created by creja_000 on 7/26/2016.

@@ -1,9 +1,9 @@
-package crejaud.tech_company_clicker.signIn;
+package com.crejaud.tech_company_clicker.signIn;
 
 import android.app.ProgressDialog;
 import android.support.v7.app.AppCompatActivity;
 
-import crejaud.tech_company_clicker.R;
+import com.crejaud.tech_company_clicker.R;
 
 public class BaseActivity extends AppCompatActivity {
 

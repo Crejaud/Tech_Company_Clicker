@@ -1,4 +1,4 @@
-package crejaud.tech_company_clicker.menu;
+package com.crejaud.tech_company_clicker.menu;
 
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -27,12 +27,12 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import crejaud.tech_company_clicker.R;
-import crejaud.tech_company_clicker.clicker.ClickerActivity;
-import crejaud.tech_company_clicker.listener.NameFinderKeyListener;
-import crejaud.tech_company_clicker.listener.BigIntegerEventListener;
-import crejaud.tech_company_clicker.signIn.BaseActivity;
-import crejaud.tech_company_clicker.signIn.SignInActivity;
+import com.crejaud.tech_company_clicker.R;
+import com.crejaud.tech_company_clicker.clicker.ClickerActivity;
+import com.crejaud.tech_company_clicker.listener.NameFinderKeyListener;
+import com.crejaud.tech_company_clicker.listener.BigIntegerEventListener;
+import com.crejaud.tech_company_clicker.signIn.BaseActivity;
+import com.crejaud.tech_company_clicker.signIn.SignInActivity;
 
 public class MenuActivity extends BaseActivity implements
         GoogleApiClient.ConnectionCallbacks,

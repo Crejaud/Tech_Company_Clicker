@@ -1,4 +1,4 @@
-package crejaud.tech_company_clicker;
+package com.crejaud.tech_company_clicker;
 
 import org.junit.Test;
 

@@ -1,4 +1,4 @@
-package crejaud.tech_company_clicker.handler;
+package com.crejaud.tech_company_clicker.handler;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;

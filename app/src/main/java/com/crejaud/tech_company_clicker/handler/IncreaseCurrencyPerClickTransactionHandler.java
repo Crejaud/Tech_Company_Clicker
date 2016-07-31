@@ -1,4 +1,6 @@
-package crejaud.tech_company_clicker.handler;
+package com.crejaud.tech_company_clicker.handler;
+
+import android.util.Log;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -6,19 +8,19 @@ import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
 
 import java.math.BigInteger;
-
-import crejaud.tech_company_clicker.listener.ClickEventListener;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by creja_000 on 7/27/2016.
  */
 
-public class XPTransactionHandler implements Transaction.Handler {
+public class IncreaseCurrencyPerClickTransactionHandler implements Transaction.Handler {
 
-    private BigInteger xpGain;
+    private ReentrantLock lock;
 
-    public XPTransactionHandler(BigInteger xpGain) {
-        this.xpGain = xpGain;
+    public IncreaseCurrencyPerClickTransactionHandler(ReentrantLock lock) {
+        this.lock = lock;
     }
 
     @Override
@@ -27,21 +29,21 @@ public class XPTransactionHandler implements Transaction.Handler {
             mutableData.setValue("0");
         }
         else {
-            BigInteger currentXp = new BigInteger(mutableData.getValue(String.class).split("/")[0]);
+            BigInteger newCurrencyPerClick = new BigInteger(mutableData.getValue(String.class));
             try {
-                currentXp = currentXp.add(xpGain);
+                newCurrencyPerClick = newCurrencyPerClick.add(new BigInteger("4"));
             } catch (ArithmeticException e) {
                 // Long overflows above max big int
             }
 
-            mutableData.setValue(currentXp.toString() + "/" + mutableData.getValue(String.class).split("/")[1]);
+            mutableData.setValue(newCurrencyPerClick.toString());
         }
         return Transaction.success(mutableData);
     }
 
     @Override
     public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
-        //uhhh?
+        lock.unlock();
+        Log.d("Lock", "Unlocked");
     }
-
 }

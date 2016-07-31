@@ -1,9 +1,9 @@
-package crejaud.tech_company_clicker.clicker;
+package com.crejaud.tech_company_clicker.clicker;
 
 import com.google.firebase.database.DatabaseReference;
 
-import crejaud.tech_company_clicker.handler.IncreaseCurrencyTransactionHandler;
-import crejaud.tech_company_clicker.listener.BigIntegerEventListener;
+import com.crejaud.tech_company_clicker.handler.IncreaseCurrencyTransactionHandler;
+import com.crejaud.tech_company_clicker.listener.BigIntegerEventListener;
 
 /**
  * Created by creja_000 on 7/28/2016.

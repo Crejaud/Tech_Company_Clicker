@@ -1,40 +1,36 @@
-package crejaud.tech_company_clicker.handler;
+package com.crejaud.tech_company_clicker.handler;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
 
 import java.math.BigInteger;
-
-import crejaud.tech_company_clicker.listener.BigIntegerEventListener;
-import crejaud.tech_company_clicker.listener.ClickEventListener;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Created by creja_000 on 7/24/2016.
+ * Created by creja_000 on 7/27/2016.
  */
 
-public class IncreaseCurrencyTransactionHandler implements Transaction.Handler {
+public class PerkPointsTransactionHandler implements Transaction.Handler {
 
-    private BigIntegerEventListener eventListener;
-    private DatabaseReference mXPRef;
+    private ReentrantLock lock;
 
-    public IncreaseCurrencyTransactionHandler(BigIntegerEventListener eventListener, DatabaseReference mXPRef) {
-        this.eventListener = eventListener;
-        this.mXPRef = mXPRef;
+    public PerkPointsTransactionHandler(ReentrantLock lock) {
+        this.lock = lock;
     }
 
     @Override
     public Transaction.Result doTransaction(MutableData mutableData) {
         if (mutableData.getValue() == null) {
+            // wot? set to 0
             mutableData.setValue("0");
         }
         else {
             BigInteger newCurrency = new BigInteger(mutableData.getValue(String.class));
             try {
-                newCurrency = newCurrency.add(eventListener.getNum());
-                mXPRef.runTransaction(new XPTransactionHandler(eventListener.getNum()));
+                newCurrency = newCurrency.add(new BigInteger("1"));
             } catch (ArithmeticException e) {
                 // Long overflows above max big int
             }
@@ -46,6 +42,7 @@ public class IncreaseCurrencyTransactionHandler implements Transaction.Handler {
 
     @Override
     public void onComplete(DatabaseError databaseError, boolean b, DataSnapshot dataSnapshot) {
-        //uhhh?
+        lock.unlock();
     }
+
 }

@@ -1,4 +1,4 @@
-package crejaud.tech_company_clicker.listener;
+package com.crejaud.tech_company_clicker.listener;
 
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;

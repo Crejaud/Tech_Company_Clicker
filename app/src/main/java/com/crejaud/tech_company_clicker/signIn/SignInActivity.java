@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package crejaud.tech_company_clicker.signIn;
+package com.crejaud.tech_company_clicker.signIn;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -43,9 +43,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 
-import crejaud.tech_company_clicker.R;
-import crejaud.tech_company_clicker.clicker.ClickerActivity;
-import crejaud.tech_company_clicker.menu.MenuActivity;
+import com.crejaud.tech_company_clicker.R;
+import com.crejaud.tech_company_clicker.clicker.ClickerActivity;
+import com.crejaud.tech_company_clicker.menu.MenuActivity;
 
 /**
  * Demonstrate Firebase Authentication using a Google ID Token.

@@ -1,4 +1,4 @@
-package crejaud.tech_company_clicker.listener;
+package com.crejaud.tech_company_clicker.listener;
 
 import android.content.Context;
 import android.util.Log;
@@ -13,7 +13,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.math.BigInteger;
 import java.util.Locale;
 
-import crejaud.tech_company_clicker.R;
+import com.crejaud.tech_company_clicker.R;
 
 /**
  * Created by creja_000 on 7/24/2016.
