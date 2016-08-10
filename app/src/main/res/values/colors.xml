@@ -9,4 +9,11 @@
 
     <color name="green">#4DFA90</color>
     <color name="red">#FF5468</color>
+
+    <color name="company_xp_primary_blue">#33B5E5</color>
+    <color name="company_xp_primary_green">#99CC00</color>
+    <color name="company_xp_primary_red">#FF4444</color>
+    <color name="company_xp_primary_orange">#FFBB33</color>
+    <color name="company_xp_primary_purple">#AA66CC</color>
+    <color name="company_xp_background_black">#3C3A3B</color>
 </resources>

@@ -2,6 +2,7 @@ package com.crejaud.tech_company_clicker.clicker;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;

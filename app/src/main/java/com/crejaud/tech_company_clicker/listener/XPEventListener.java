@@ -5,6 +5,7 @@ import android.content.Context;
 import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.animation.DecelerateInterpolator;
+import android.view.animation.LinearInterpolator;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -59,7 +60,7 @@ public class XPEventListener implements ValueEventListener {
 
         ObjectAnimator animation = ObjectAnimator.ofInt(xpBar, "progress", percentage.intValue());
         animation.setDuration(2000);
-        animation.setInterpolator(new DecelerateInterpolator());
+        animation.setInterpolator(new LinearInterpolator());
         animation.start();
 
         Log.d("XP Percentage", percentage.intValue() + "");
